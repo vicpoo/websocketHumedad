@@ -1,3 +1,4 @@
+//humidity.go
 package entities
 
 import "time"

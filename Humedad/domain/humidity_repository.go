@@ -1,3 +1,4 @@
+//humedity_repository.go
 package domain
 
 import "github.com/vicpoo/websocketHumedad/Humedad/domain/entities"

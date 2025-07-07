@@ -1,3 +1,4 @@
+//humidity_usecase.go
 package application
 
 import (
