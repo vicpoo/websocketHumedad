@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/vicpoo/websocketHumedad/core"
 	"github.com/vicpoo/websocketHumedad/Humedad/infrastructure"
 )
 
@@ -20,6 +21,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
+	// ✅ Inicializa la base de datos
+	core.InitDB()
+
 	r := gin.Default()
 
 	// CORS
@@ -42,14 +46,14 @@ func main() {
 	hub := infrastructure.NewHub()
 	go hub.Run()
 
-	// Servicio de mensajería
+	// Servicio de mensajería (RabbitMQ)
 	messagingService := infrastructure.NewMessagingService(hub)
 	defer messagingService.Close()
 
-	// Solo rutas para humidity
+	// Rutas WebSocket para humedad
 	infrastructure.SetupHumidityRoutes(r, hub)
 
-	// Consumidor RabbitMQ solo para sensor_inte
+	// Inicia consumidor RabbitMQ para sensor de humedad
 	if err := messagingService.ConsumeHumidityMessages(); err != nil {
 		log.Fatalf("Failed to start Humidity consumer: %v", err)
 	}
@@ -58,7 +62,7 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Ejecutar servidor
+	// Inicia servidor
 	go func() {
 		if err := r.Run(":8001"); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
